@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"> 
+    <title></title>
+    <link href="./styles/kendo.common.min.css" rel="stylesheet" />
+    <link href="./styles/kendo.default.min.css" rel="stylesheet" />
+    <link href="./styles/example.css" rel="stylesheet" />
+    <script src="./js/jquery.min.js"></script>
+    <script src="./js/kendo.web.min.js"></script>
+    <script src="./js/cultures/kendo.culture.de-CH.min.js"></script>
+</head>
+<body>
+            <script src="./content/images.js"></script>
+
+        <div id="example" class="k-content">
+            <div id="content">
+            <div id="imageDb">
+                <div id="title">Bilderarchiv</div>
+                <div id="grid" style="height: 380px"></div>
+
+            </div>
+        </div>
+
+            <style scoped>
+                #content {
+                    width:100%;
+
+                }
+
+                #imageDb {
+                    background-color: gray;
+                    -moz-border-radius: 15px;
+                    border-radius: 15px;
+                    padding:10px 25px 25px 25px;
+                    margin:10px;
+                    max-width:700px;
+                    min-width:400px;
+                    horizontal-align:center;
+                }
+                #title{
+                    padding:10px 0px 10px 0px;
+                    font-size: 20px;
+                    color:white;
+                }
+
+
+            </style>
+            <script>
+
+                kendo.culture("de-CH");
+
+                $(document).ready(function() {
+                    $("#grid").kendoGrid({
+                        dataSource: {
+                            data: createRandomData(50),
+                            pageSize: 10,
+                        },
+                        groupable: false,
+                        sortable: true,
+                        pageable: {
+                            refresh: true,
+                            pageSizes: true,
+                            messages: {
+                                display: "{0} - {1} von {2} Bilder", //{0} is the index of the first record on the page, {1} - index of the last record on the page, {2} is the total amount of records
+                                empty: "Keine Bilder vorhanden",
+                                page: "Seite",
+                                of: "von {0}", //{0} is total amount of pages
+                                itemsPerPage: "Bilder pro Seite",
+                                first: "Erste Seite",
+                                previous: "Vorherige Seite",
+                                next: "Nächste Seite",
+                                last: "Letzte Seite",
+                                refresh: "Neu laden"
+                                }
+                        },
+                        filterable: {
+                            extra: false,
+                            operators: {
+                                string: {
+                                    startswith: "Beginnt mit",
+                                    endswith: "Endet mit",
+                                    eq: "Ist gleich",
+                                    contains: "Enthält"
+                                }
+                            },
+                            messages: {
+                                    clear: "kein Filter",
+                                    filter: "Filtern",
+                                    info: "Filtern nach: "
+                            }
+                            
+                        },
+                        columns: [ {
+                                field: "ImgName",
+                                width: 120,
+                                title: "Bildname"
+                            } , {
+                                field: "FileName",
+                                width: 90,
+                                title: "Dateiname"
+                            } , {
+                                width: 100,
+                                field: "Editor",
+                                title: "Eigentümer"
+                            } , {
+                                width: 100,
+                                field: "Size",
+                                title: "Bildgrösse"
+                            }
+                            , {
+                                width: 80,
+                                field: "CreateDate",
+                                title: "Erzeugt am",
+                                template: '#= kendo.toString(CreateDate,"dd. MM. yyyy") #'
+                            } , {
+                                width: 100,
+                                field: "Licensefee",
+                                title: "Lizenzgebühr",
+                                aggregates: [ "count" ],
+                                template: 'CHF #= Licensefee #',
+                                groupFooterTemplate: "Summe: #: count #"
+                            }
+                        ]
+
+                    });
+                });
+            </script>
+        </div>
+
+
+</body>
+</html>
