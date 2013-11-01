@@ -18,3 +18,14 @@ function createRandomData(count) {
 		} 
 	return data; 
 } 
+
+function getEditors()
+{
+	return editors;
+}
+
+
+function getSizes()
+{
+	return sizes;
+}

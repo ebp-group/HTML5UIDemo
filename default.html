@@ -12,48 +12,124 @@
 </head>
 <body>
             <script src="./content/images.js"></script>
+            <script src="./content/countries.js"></script>
+            
 
         <div id="example" class="k-content">
             <div id="content">
-            <div id="imageDb">
-                <div id="title">Bilderarchiv</div>
-                <div id="grid" style="height: 380px"></div>
 
+            <div id="imageDb">
+                <div id="title">Demoapplikation Foto-Datenbank</div>
+                <div id="createArea"><input id ="createButton" type = "button" value="Neues Bild einfügen" </></div>
+                <div id="grid" style="height: 380px"></div>
+                <div id="details"></div>
             </div>
         </div>
-
-            <style scoped>
-                #content {
-                    width:100%;
-
-                }
-
-                #imageDb {
-                    background-color: gray;
-                    -moz-border-radius: 15px;
-                    border-radius: 15px;
-                    padding:10px 25px 25px 25px;
-                    margin:10px;
-                    max-width:700px;
-                    min-width:400px;
-                    horizontal-align:center;
-                }
-                #title{
-                    padding:10px 0px 10px 0px;
-                    font-size: 20px;
-                    color:white;
-                }
-
-
-            </style>
+            
             <script>
-
                 kendo.culture("de-CH");
+
+                var wnd,
+                    detailsTemplate, imageList;
+                    imageList = createRandomData(53);
+                
+                 function editRecord(e) {
+                    e.preventDefault();
+
+                    var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+                    showEditor(dataItem, false);
+                    
+                }
+
+                 function createRecord(e) {
+                    e.preventDefault();
+                    // count existing
+                    var grid = $("#grid").data("kendoGrid");
+                    var gridObjs = grid.dataSource.data();
+                    var dataItem = { Id: (gridObjs.length+1) , ImgName: "", FileName: "", Editor: "", CreateDate: Date.now(), Size: "", Licensefee: "" };
+                    showEditor(dataItem, true);
+                    
+                }
+
+                function showEditor(dataItem, isNewObject)
+                {
+                    wnd.content(detailsTemplate(dataItem));
+                    wnd.center().open();
+
+                     var validator = $("#details-container").kendoValidator().data("kendoValidator");
+                        var status = $(".status");
+
+                        $("#saveButton").click(function(){
+                                if (validator.validate()) {
+                                    status.text("Das Formular ist korrekt befüllt.")
+                                    .removeClass("invalid")
+                                    .addClass("valid");
+                                    wnd.center().close();
+                                    var grid = $("#grid").data("kendoGrid");
+                                    var gridObjs = grid.dataSource.data();
+                                    if(isNewObject == true)
+                                    {
+                                        grid.dataSource.add(dataItem);
+                                        var pageSize =grid.dataSource.pageSize();
+                                        console.log(pageSize);
+                                        var objCount = gridObjs.length +1;
+                                        console.log(objCount);
+                                        var pageNo = Math.floor(objCount/pageSize)+1;
+                                        console.log(pageNo);
+                                        grid.dataSource.page(pageNo);
+                                    }
+                                    for (var i= 0; i< gridObjs.length; i++)
+                                    {
+                                        if (gridObjs[i].Id == dataItem.Id)
+                                        {
+                                            var imgObj = grid.dataSource.at(i);
+                                        
+                                            if(imgObj != undefined)
+                                            {
+                                                imgObj.set("ImgName",$("#imgName" ).val());
+                                                imgObj.set("FileName",$("#filename" ).val());
+                                                imgObj.set("Licensefee",$("#licensefee" ).val());
+                                                imgObj.set("Editor",$("#editor" ).val());
+                                                imgObj.set("Size",$("#size" ).val());
+                                                imgObj.set("CreateDate",$("#createdate").val());
+                                            }
+                                        }
+                                    }
+                            } else {
+                                    status.text("Achtung, das Formular enthält Fehler.")
+                                    .removeClass("valid")
+                                    .addClass("invalid");
+                            }
+                        });
+
+                        //create AutoComplete UI component für Editors
+                        $("#editor").kendoAutoComplete({
+                            dataSource: getEditors(),
+                            filter: "contains",
+                            placeholder: "Wähle einen Fotografen..."
+                        });
+
+                        //create AutoComplete UI component für Size
+                        $("#size").kendoAutoComplete({
+                            dataSource: getSizes(),
+                            filter: "contains",
+                            placeholder: "Wähle eine Bildgrösse..."
+                        });
+
+                        // create DatePicker
+                        $("#createdate").kendoDatePicker({
+                            value: new Date(dataItem.CreateDate)
+                        });
+                }
+
+
+
+            
 
                 $(document).ready(function() {
                     $("#grid").kendoGrid({
                         dataSource: {
-                            data: createRandomData(50),
+                            data: imageList,
                             pageSize: 10,
                         },
                         groupable: false,
@@ -83,6 +159,7 @@
                                     eq: "Ist gleich",
                                     contains: "Enthält"
                                 }
+
                             },
                             messages: {
                                     clear: "kein Filter",
@@ -102,7 +179,7 @@
                             } , {
                                 width: 100,
                                 field: "Editor",
-                                title: "Eigentümer"
+                                title: "Fotograf"
                             } , {
                                 width: 100,
                                 field: "Size",
@@ -112,7 +189,7 @@
                                 width: 80,
                                 field: "CreateDate",
                                 title: "Erzeugt am",
-                                template: '#= kendo.toString(CreateDate,"dd. MM. yyyy") #'
+                                template: '#= kendo.toString(CreateDate,"dd.MM.yyyy") #'
                             } , {
                                 width: 100,
                                 field: "Licensefee",
@@ -120,11 +197,61 @@
                                 aggregates: [ "count" ],
                                 template: 'CHF #= Licensefee #',
                                 groupFooterTemplate: "Summe: #: count #"
-                            }
-                        ]
+                            },
+                            { command: { text: "Editieren", click: editRecord }, title: " ", width: "80px" }
+
+                        ],
+                        editable: "popup"
 
                     });
+
+                    wnd = $("#details")
+                        .kendoWindow({
+                            title: "Neues Bild erzeugen",
+                            modal: true,
+                            visible: false,
+                            resizable: true,
+                            width: 700
+                        }).data("kendoWindow");                
+
+                    detailsTemplate = kendo.template($("#detail-template").html());
+
+                    $("#createButton").click(createRecord);
+                    
                 });
+
+                
+            </script>
+            <script type="text/x-kendo-template" id="detail-template">
+                <div id="details-container">
+                    <div class="block">
+                        <label for="imgName" class="required">Bildname:</label>
+                        <input class="input" type="text" id="imgName" name="imgName" value="#=ImgName#" required validationMessage="Bitte definieren Sie einen Namen."/>
+                    </div>
+                    <div class="block">
+                        <label for="filename" class="required">Dateiname:</label>
+                        <input class="input" type="text" id="filename" name="filename" value="#=FileName#" required validationMessage="Bitte definieren Sie den Dateinamen des Bildes."/>
+                    </div>
+                    <div class="block">
+                        <label for="editor" class="required">Autor:</label>
+                        <input class="input" type="text" id="editor" name="editor" value="#=Editor#" required validationMessage="Bitte definieren Sie den Fotografen."/>
+                    </div>
+                    <div class="block">
+                        <label for="size" class="required">Bildgrösse:</label>
+                        <input class="input" type="text" id="size" name="size" value="#=Size#" required validationMessage="Bitte definieren Sie die Grösse des Bildes in Pixel."/>
+                    </div>
+                    <div class="block">
+                        <label for="createdate" class="required">Erzeugungsdatum:</label>
+                        <input class="input" id="createdate" name="createdate" required validationMessage="Bitte definieren Sie das Erzeugungsdatum."/>
+                    </div>
+                    <div class="block">
+                        <label for="licensefee" class="required">Lizenzgebühr [CHF]:</label>
+                        <input class="input" id="licensefee" name="licensefee" required value="#=Licensefee#" validationMessage="Bitte definieren Sie die Höhe der Lizenzgebühr [0.00]."/>
+                    </div>
+                    <div class="status"></div>
+                    <div><input id="saveButton" type ="Button" Value = "Bild speichern" /></div>
+                    <div><b>Hinweis:</b> Das ist eine Demo-Applikation, der die Daten werden nur temporär im Browser gespeichert.</div>
+                </div>
             </script>
         </div>
 
