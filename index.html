@@ -19,7 +19,7 @@
             <div id="content">
 
             <div id="imageDb">
-                <div id="title">Demoapplikation Foto-Datenbank</div>
+                <div id="title">HTML5-Showcase: Foto-Datenbank</div>
                 <div id="createArea"><input id ="createButton" type = "button" value="Neues Bild einfügen" </></div>
                 <div id="grid" style="height: 380px"></div>
                 <div id="details"></div>
@@ -29,9 +29,11 @@
             <script>
                 kendo.culture("de-CH");
 
+                var EXCHANGERATE = 0.83;
                 var wnd,
                     detailsTemplate, imageList;
                     imageList = createRandomData(53);
+
                 
                  function editRecord(e) {
                     e.preventDefault();
@@ -126,6 +128,27 @@
                         $("#createdate").kendoDatePicker({
                             value: new Date(dataItem.CreateDate)
                         });
+
+                        // EUR Value Calcularot
+                        $("#licensefee").keyup(function() {
+
+                           calculateEuro();
+                        });
+
+                        calculateEuro();
+
+                        function calculateEuro()
+                        {
+                                $('#eurLicenseFee').html('');
+
+                                var valCHF = $('#licensefee').val();
+
+                                if(!isNaN(valCHF) && valCHF >0) {
+                                        var eurValue = parseFloat(valCHF, 10) * EXCHANGERATE;
+                                        $('#eurLicenseFee').html(eurValue.toFixed(2));
+
+                                };
+                        }
                 }
 
 
@@ -253,6 +276,10 @@
                     <div class="block">
                         <label for="licensefee" class="required">Lizenzgebühr [CHF]:</label>
                         <input class="input" id="licensefee" name="licensefee" required value="#=Licensefee#" validationMessage="Bitte definieren Sie die Höhe der Lizenzgebühr [0.00]."/>
+                    </div>
+                    <div class="block">
+                        <label >Lizenzgebühr [EUR]:</label>
+                        <label id="eurLicenseFee"></label>
                     </div>
                     <div class="status"></div>
                     <div><input id="saveButton" type ="Button" Value = "Bild speichern" />&nbsp;<input id="cancelButton" type ="Button" Value = "Abbrechen" /></div>
